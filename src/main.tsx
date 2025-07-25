@@ -6,10 +6,11 @@ import router from './router';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { viVN } from '@clerk/localizations';
 import { env } from './configs/env';
+import routes from './routes';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ClerkProvider publishableKey={env.CLERK_PUBLISHABLE_KEY} localization={viVN}>
+    <ClerkProvider publishableKey={env.CLERK_PUBLISHABLE_KEY} localization={viVN} signInUrl={routes.auth.signIn} signUpUrl={routes.auth.signUp}>
       <RouterProvider router={router} />
     </ClerkProvider>
   </StrictMode>,
