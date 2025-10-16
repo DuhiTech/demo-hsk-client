@@ -1,0 +1,188 @@
+'use client';
+
+import { type TableFilterField } from '@/components/custom/data-table/filter-type';
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type OnChangeFn,
+  type PaginationState,
+  type RowSelectionState,
+  type SortingState,
+  type TableState,
+  useReactTable,
+} from '@tanstack/react-table';
+import { useEffect, useMemo, useState } from 'react';
+import { useDebounce } from '.';
+
+interface UseDataTableProps<TData, TValue> {
+  data: TData[];
+  columns: ColumnDef<TData, TValue>[];
+  totalCount?: number;
+  state?: TableState;
+  filters?: TableFilterField<TData>[];
+  defaultSorting?: TableState['sorting'];
+  onRowChecked?: (items: TData[]) => void;
+}
+
+const searchParams = new URLSearchParams();
+
+export const useDataTable = <TData, TValue>({
+  columns,
+  data,
+  totalCount,
+  state,
+  filters,
+  defaultSorting,
+  onRowChecked,
+}: UseDataTableProps<TData, TValue>) => {
+  const [queryString, setQueryString] = useState('');
+  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
+  const [pageCount, setPageCount] = useState(0);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState<SortingState>(() => defaultSorting || []);
+
+  const { searchFields, optionFields } = useMemo(() => {
+    return {
+      searchFields: filters?.filter((field) => !field.options) || [],
+      optionFields: filters?.filter((field) => field.options) || [],
+    };
+  }, [filters]);
+
+  const debouncedSearchColumns = JSON.parse(
+    useDebounce(
+      JSON.stringify(
+        columnFilters.filter((filter) => {
+          return searchFields.some((column) => column.value === filter.id);
+        }),
+      ),
+      500,
+    ),
+  ) as ColumnFiltersState;
+
+  useEffect(() => {
+    searchFields.forEach((field) => {
+      const column = debouncedSearchColumns.find((col) => col.id === field.value);
+      if (column) {
+        searchParams.set(field.key, column.value as string);
+      } else {
+        searchParams.delete(field.key);
+      }
+    });
+    setQueryString(searchParams.toString());
+  }, [debouncedSearchColumns, searchFields]);
+
+  useEffect(() => {
+    searchParams.set('PageIndex', (pageIndex + 1).toString());
+    searchParams.set('PageSize', pageSize.toString());
+    const firstSorting = sorting[0];
+    if (firstSorting) {
+      searchParams.set('SortBy', firstSorting.id);
+      searchParams.set('IsAscending', String(!firstSorting.desc));
+    } else {
+      searchParams.delete('SortBy');
+      searchParams.delete('IsAscending');
+    }
+    setQueryString(searchParams.toString());
+  }, [pageIndex, pageSize, sorting]);
+
+  useEffect(() => {
+    if (totalCount !== undefined) {
+      setPageCount(Math.ceil(totalCount / pageSize));
+    }
+  }, [totalCount, pageSize]);
+
+  useEffect(() => {
+    handleRowSelection({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryString]);
+
+  const handlePaginationChange: OnChangeFn<PaginationState> = (updater) => {
+    setPagination((prevPagination) => {
+      const newPagination = typeof updater === 'function' ? updater(prevPagination) : updater;
+
+      if (newPagination.pageSize !== prevPagination.pageSize) {
+        newPagination.pageIndex = 0;
+      }
+      searchParams.set('PageIndex', (newPagination.pageIndex + 1).toString());
+      searchParams.set('PageSize', pageSize.toString());
+      setQueryString(searchParams.toString());
+
+      return newPagination;
+    });
+  };
+
+  const handleRowSelection: OnChangeFn<RowSelectionState> = (updater) => {
+    setRowSelection((prevRowSelection) => {
+      const newRowSelection = typeof updater === 'function' ? updater(prevRowSelection) : updater;
+      if (onRowChecked) {
+        const items = Object.keys(newRowSelection).map((key) => data[+key]);
+        onRowChecked(items);
+      }
+      return newRowSelection;
+    });
+  };
+
+  const handleColumnFilters: OnChangeFn<ColumnFiltersState> = (updater) => {
+    setColumnFilters((prevColumnFilter) => {
+      const newColumnFilter = typeof updater === 'function' ? updater(prevColumnFilter) : updater;
+
+      const optionColumnFields = newColumnFilter.filter((filter) => {
+        return optionFields.some((column) => column.value === filter.id);
+      });
+
+      optionFields.forEach((field) => {
+        const column = optionColumnFields.find((col) => col.id === field.value);
+        searchParams.delete(field.key);
+
+        if (column) {
+          (column.value as string[]).forEach((value) => searchParams.append(field.key, value));
+        } else {
+          searchParams.delete(field.key);
+        }
+      });
+
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+      setQueryString(searchParams.toString());
+      return newColumnFilter;
+    });
+  };
+
+  const table = useReactTable({
+    columns,
+    data,
+    pageCount,
+    enableRowSelection: true,
+    state: {
+      ...state,
+      pagination: {
+        pageIndex,
+        pageSize,
+      },
+      sorting,
+      rowSelection,
+      columnFilters,
+    },
+    onPaginationChange: handlePaginationChange,
+    onRowSelectionChange: handleRowSelection,
+    onColumnFiltersChange: handleColumnFilters,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
+  });
+
+  return { table, queryString };
+};

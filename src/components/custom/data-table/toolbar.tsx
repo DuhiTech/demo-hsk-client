@@ -1,0 +1,67 @@
+import { Input } from '@/components/ui/input';
+import type { Table } from '@tanstack/react-table';
+import { TableViewOptions } from './column-toggle';
+import { TableFacetedFilter } from './faceted-filter';
+import type { TableFilterField } from './filter-type';
+import { useMemo, type ComponentProps } from 'react';
+import { Button } from '@/components/ui/button';
+
+interface TableToolbarProps<TData> {
+  table: Table<TData>;
+  filters?: TableFilterField<TData>[];
+  buttons?: ComponentProps<typeof Button>[];
+}
+
+export function TableToolbar<TData>({ table, filters, buttons }: TableToolbarProps<TData>) {
+  const { searchFields, optionFields } = useMemo(() => {
+    return {
+      searchFields: filters?.filter((field) => !field.options) || [],
+      optionFields: filters?.filter((field) => field.options) || [],
+    };
+  }, [filters]);
+  const isFiltered = table.getState().columnFilters.length > 0;
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex flex-1 items-center space-x-2">
+        {searchFields.length > 0 &&
+          searchFields.map(
+            (field) =>
+              table.getColumn(field.value ? String(field.value) : '') && (
+                <Input
+                  key={String(field.value)}
+                  placeholder={field.placeholder}
+                  value={(table.getColumn(String(field.value))?.getFilterValue() as string) ?? ''}
+                  onChange={(event) => table.getColumn(String(field.value))?.setFilterValue(event.target.value)}
+                  className="h-9 w-40 lg:w-64"
+                />
+              ),
+          )}
+        {optionFields.length > 0 &&
+          optionFields.map(
+            (column) =>
+              table.getColumn(column.value ? String(column.value) : '') && (
+                <TableFacetedFilter
+                  key={String(column.value)}
+                  column={table.getColumn(column.value ? String(column.value) : '')}
+                  title={column.label}
+                  multiple={column.multiple}
+                  options={column.options ?? []}
+                />
+              ),
+          )}
+        {isFiltered && (
+          <Button aria-label="Đặt lại" variant="ghost" onClick={() => table.resetColumnFilters()}>
+            Đặt lại
+          </Button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {buttons?.map((props, index) => (
+          <Button key={index} variant="outline" {...props} />
+        ))}
+        <TableViewOptions table={table} />
+      </div>
+    </div>
+  );
+}

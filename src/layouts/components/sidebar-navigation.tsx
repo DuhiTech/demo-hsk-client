@@ -36,7 +36,7 @@ const NavigationButton = ({ Icon, title, href, collapsed }: NavigationButtonProp
   return (
     <Tooltip content={title} contentProps={{ hidden: !collapsed, side: 'right' }}>
       <Button
-        variant={active ? 'primary' : collapsed ? 'secondary' : 'ghost'}
+        variant={active ? 'default' : collapsed ? 'secondary' : 'ghost'}
         size="lg"
         className={collapsed ? 'size-12 justify-center rounded-full' : 'justify-start'}
         asChild
