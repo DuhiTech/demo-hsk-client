@@ -23,7 +23,7 @@ import { useDebounce } from '.';
 interface UseDataTableProps<TData, TValue> {
   data: TData[];
   columns: ColumnDef<TData, TValue>[];
-  totalCount?: number;
+  total?: number;
   state?: TableState;
   filters?: TableFilterField<TData>[];
   defaultSorting?: TableState['sorting'];
@@ -35,7 +35,7 @@ const searchParams = new URLSearchParams();
 export const useDataTable = <TData, TValue>({
   columns,
   data,
-  totalCount,
+  total,
   state,
   filters,
   defaultSorting,
@@ -79,24 +79,24 @@ export const useDataTable = <TData, TValue>({
   }, [debouncedSearchColumns, searchFields]);
 
   useEffect(() => {
-    searchParams.set('PageIndex', (pageIndex + 1).toString());
-    searchParams.set('PageSize', pageSize.toString());
+    searchParams.set('page', (pageIndex + 1).toString());
+    searchParams.set('limit', pageSize.toString());
     const firstSorting = sorting[0];
     if (firstSorting) {
-      searchParams.set('SortBy', firstSorting.id);
-      searchParams.set('IsAscending', String(!firstSorting.desc));
+      searchParams.set('sortBy', firstSorting.id);
+      searchParams.set('order', firstSorting.desc ? 'desc' : 'asc');
     } else {
-      searchParams.delete('SortBy');
-      searchParams.delete('IsAscending');
+      searchParams.delete('sortBy');
+      searchParams.delete('order');
     }
     setQueryString(searchParams.toString());
   }, [pageIndex, pageSize, sorting]);
 
   useEffect(() => {
-    if (totalCount !== undefined) {
-      setPageCount(Math.ceil(totalCount / pageSize));
+    if (total !== undefined) {
+      setPageCount(Math.ceil(total / pageSize));
     }
-  }, [totalCount, pageSize]);
+  }, [total, pageSize]);
 
   useEffect(() => {
     handleRowSelection({});
@@ -110,8 +110,8 @@ export const useDataTable = <TData, TValue>({
       if (newPagination.pageSize !== prevPagination.pageSize) {
         newPagination.pageIndex = 0;
       }
-      searchParams.set('PageIndex', (newPagination.pageIndex + 1).toString());
-      searchParams.set('PageSize', pageSize.toString());
+      searchParams.set('page', (newPagination.pageIndex + 1).toString());
+      searchParams.set('limit', pageSize.toString());
       setQueryString(searchParams.toString());
 
       return newPagination;

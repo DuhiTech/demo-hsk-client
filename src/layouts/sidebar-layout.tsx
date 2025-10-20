@@ -11,8 +11,10 @@ const SidebarLayout = ({ items }: { items: NavigationItem[] }) => {
         </div>
 
         <main className="flex-1">
-          Header
-          <Outlet />
+          <div className="flex flex-col gap-4">
+            Header
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

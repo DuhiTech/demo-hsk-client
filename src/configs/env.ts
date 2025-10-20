@@ -2,10 +2,12 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   CLERK_PUBLISHABLE_KEY: z.string(),
+  API_URL: z.string(),
 });
 
 const _env = {
   CLERK_PUBLISHABLE_KEY: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+  API_URL: import.meta.env.VITE_API_URL,
 };
 
 const result = envSchema.safeParse(_env);

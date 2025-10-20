@@ -1,20 +1,18 @@
 'use client';
 
-import { type ComponentProps, forwardRef, type Ref, useImperativeHandle, useMemo, useState } from 'react';
+import { type ComponentProps, forwardRef, type Ref, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 import { DataTable } from './table';
 import type { ColumnDef, TableState } from '@tanstack/react-table';
-import useSWRImmutable from 'swr/immutable';
-// import { fetcher } from '@/lib/http';
 import { TableColumnHeader } from './column-header';
 import { TablePagination } from './pagination';
 import { TableToolbar } from './toolbar';
-import { mutate } from 'swr';
-import { useDataTable, useUpdateEffect } from '@/hooks';
+import { useApi, useDataTable, useUpdateEffect } from '@/hooks';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { TableFilterField } from './filter-type';
 import type { IFilterList } from '@/types';
 import { Button } from '@/components/ui/button';
 import { RotateCcw } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface TableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -46,13 +44,27 @@ function TableComponent<TData, TValue>(
   ref: Ref<TableRef>,
 ) {
   const [urlQuery, setUrlQuery] = useState<string>();
-  const { data, isLoading } = useSWRImmutable<IFilterList<TData>>(urlQuery, () => {
-    return {
-      items: [],
-      total: 0,
-      limit: 0,
-      page: 0,
-    };
+  const { api } = useApi();
+  const queryClient = useQueryClient();
+
+  const queryKey = useMemo(() => ['table', urlQuery], [urlQuery]);
+
+  const { data, isFetching } = useQuery<IFilterList<TData>>({
+    queryKey,
+    queryFn: async () => {
+      if (!urlQuery)
+        return {
+          items: [],
+          limit: 0,
+          page: 0,
+          total: 0,
+        };
+
+      const res = await api.get<IFilterList<TData>>(urlQuery);
+      return res.data;
+    },
+    enabled: !!urlQuery,
+    staleTime: 60_000,
   });
 
   const mColumns = useMemo(() => {
@@ -96,11 +108,19 @@ function TableComponent<TData, TValue>(
   const { table, queryString } = useDataTable({
     data: data?.items || [],
     columns: mColumns,
-    totalCount: data?.total,
+    total: data?.total,
     filters,
     defaultSorting,
     onRowChecked: onCheck,
   });
+
+  const refresh = useCallback(() => {
+    return queryClient.invalidateQueries({
+      predicate: (query) =>
+        query.queryKey.some((k) => typeof k === 'string' && k.includes('table')) &&
+        query.queryKey.some((k) => typeof k === 'string' && k.startsWith(url)),
+    });
+  }, [queryClient, url]);
 
   const tButtons: ComponentProps<typeof Button>[] = useMemo(() => {
     if (hasRefresh) {
@@ -109,25 +129,25 @@ function TableComponent<TData, TValue>(
         {
           children: <RotateCcw />,
           size: 'icon',
-          onClick: () => mutate((key: string) => key.startsWith(url), undefined, { revalidate: true }),
+          onClick: refresh,
         },
       ];
     }
     return buttons;
-  }, [buttons, hasRefresh, url]);
+  }, [buttons, hasRefresh, refresh]);
 
   useUpdateEffect(() => {
     setUrlQuery(url + '?' + queryString);
   }, [url, queryString]);
 
   useImperativeHandle(ref, () => ({
-    reload: async () => await mutate((key: string) => key.startsWith(url), undefined, { revalidate: true }),
+    reload: refresh,
   }));
 
   return (
     <div className="space-y-4">
       <TableToolbar table={table} filters={filters} buttons={tButtons} />
-      <DataTable table={table} isLoading={isLoading} headClassName={headClassName} />
+      <DataTable table={table} isLoading={isFetching} headClassName={headClassName} />
       <TablePagination table={table} />
     </div>
   );
