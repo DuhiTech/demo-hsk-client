@@ -148,7 +148,7 @@ function TableComponent<TData, TValue>(
     <div className="space-y-4">
       <TableToolbar table={table} filters={filters} buttons={tButtons} />
       <DataTable table={table} isLoading={isFetching} headClassName={headClassName} />
-      <TablePagination table={table} />
+      <TablePagination table={table} canCheck={!!onCheck} />
     </div>
   );
 }

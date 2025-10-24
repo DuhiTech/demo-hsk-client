@@ -20,7 +20,7 @@ export function TableViewOptions<TData>({ table }: TableViewOptionsProps<TData>)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outlined" size="icon">
           <SlidersHorizontal className="size-5" />
           <span className="sr-only">Hiển thị</span>
         </Button>

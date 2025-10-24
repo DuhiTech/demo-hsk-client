@@ -58,7 +58,7 @@ export function TableToolbar<TData>({ table, filters, buttons }: TableToolbarPro
       </div>
       <div className="flex items-center gap-2">
         {buttons?.map((props, index) => (
-          <Button key={index} variant="outline" {...props} />
+          <Button key={index} variant="outlined" {...props} />
         ))}
         <TableViewOptions table={table} />
       </div>

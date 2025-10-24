@@ -37,7 +37,7 @@ export function TableFacetedFilter<TData, TValue>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="border-dashed">
+        <Button variant="outlined" className="border-dashed">
           <CirclePlus className="size-5" />
           {title}
           {selectedValues?.size > 0 && (

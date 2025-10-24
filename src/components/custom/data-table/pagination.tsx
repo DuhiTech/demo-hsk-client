@@ -5,13 +5,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface TablePaginationProps<TData> {
   table: Table<TData>;
+  canCheck: boolean;
 }
 
-export function TablePagination<TData>({ table }: TablePaginationProps<TData>) {
+export function TablePagination<TData>({ table, canCheck }: TablePaginationProps<TData>) {
   return (
     <div className="flex items-center justify-between gap-y-4 px-2 max-md:flex-col-reverse">
-      <div className="text-muted-foreground flex-1 text-sm">
-        {table.getFilteredSelectedRowModel().rows.length} trên {table.getFilteredRowModel().rows.length} dòng được chọn.
+      <div>
+        {canCheck && (
+          <span className="text-muted-foreground text-sm">
+            {table.getFilteredSelectedRowModel().rows.length} trên {table.getFilteredRowModel().rows.length} dòng được
+            chọn.
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-4 max-sm:flex-col-reverse">
         <div className="flex items-center space-x-2">
@@ -39,7 +45,7 @@ export function TablePagination<TData>({ table }: TablePaginationProps<TData>) {
         </div>
         <div className="flex items-center space-x-2">
           <Button
-            variant="outline"
+            variant="outlined"
             className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
@@ -48,7 +54,7 @@ export function TablePagination<TData>({ table }: TablePaginationProps<TData>) {
             <ChevronsLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="outlined"
             className="h-8 w-8 p-0"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
@@ -57,7 +63,7 @@ export function TablePagination<TData>({ table }: TablePaginationProps<TData>) {
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="outlined"
             className="h-8 w-8 p-0"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
@@ -66,7 +72,7 @@ export function TablePagination<TData>({ table }: TablePaginationProps<TData>) {
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant="outlined"
             className="hidden h-8 w-8 p-0 lg:flex"
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
