@@ -23,7 +23,7 @@ const Sidebar = ({ items }: { items: NavigationItem[] }) => {
           <Tooltip content={isCollapse ? 'Mở rộng' : 'Thu gọn'}>
             <button
               className={cn(
-                'bg-primary hover:bg-primary/90 text-primary-foreground flex cursor-pointer items-center justify-center transition-colors',
+                'bg-primary hover:bg-primary-dark text-primary-foreground flex cursor-pointer items-center justify-center transition-colors',
                 isCollapse ? 'size-12 rounded-full' : 'h-full rounded-none rounded-bl-2xl p-4',
               )}
               onClick={toggleSidebar}

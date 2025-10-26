@@ -36,16 +36,14 @@ const NavigationButton = ({ Icon, title, href, collapsed }: NavigationButtonProp
   return (
     <Tooltip content={title} contentProps={{ hidden: !collapsed, side: 'right' }}>
       <Button
-        variant={active ? 'contained' : collapsed ? 'outlined' : 'ghost'}
+        variant={active ? 'contained' : collapsed ? 'soft' : 'ghost'}
         color={active ? 'primary' : 'default'}
         size="lg"
         className={collapsed ? 'size-12 justify-center rounded-full' : 'justify-start'}
         asChild
+        startIcon={<Icon className="size-5" />}
       >
-        <Link to={href}>
-          <Icon className="size-5" />
-          {!collapsed && title}
-        </Link>
+        <Link to={href}>{!collapsed && title}</Link>
       </Button>
     </Tooltip>
   );
