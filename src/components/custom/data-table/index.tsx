@@ -74,6 +74,7 @@ function TableComponent<TData, TValue>(
         return {
           ...column,
           header: ({ column }) => <TableColumnHeader column={column} title={title} />,
+          meta: title,
         } as ColumnDef<TData, TValue>;
       }
       return column;

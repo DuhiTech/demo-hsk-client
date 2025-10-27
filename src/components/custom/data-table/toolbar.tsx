@@ -5,6 +5,7 @@ import { TableFacetedFilter } from './faceted-filter';
 import type { TableFilterField } from './filter-type';
 import { useMemo, type ComponentProps } from 'react';
 import { Button } from '@/components/ui/button';
+import { Search } from 'lucide-react';
 
 interface TableToolbarProps<TData> {
   table: Table<TData>;
@@ -33,7 +34,8 @@ export function TableToolbar<TData>({ table, filters, buttons }: TableToolbarPro
                   placeholder={field.placeholder}
                   value={(table.getColumn(String(field.value))?.getFilterValue() as string) ?? ''}
                   onChange={(event) => table.getColumn(String(field.value))?.setFilterValue(event.target.value)}
-                  className="h-9 w-40 lg:w-64"
+                  className="w-40 lg:w-64"
+                  startAdornment={<Search className="size-5" />}
                 />
               ),
           )}

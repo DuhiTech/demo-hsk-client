@@ -39,7 +39,7 @@ export function TableViewOptions<TData>({ table }: TableViewOptionsProps<TData>)
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.id}
+                {typeof column.columnDef.meta === 'string' ? column.columnDef.meta : column.id}
               </DropdownMenuCheckboxItem>
             );
           })}
